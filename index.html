@@ -1,154 +1,29 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAC 2026 - UNEB</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAC 2026 - Consulta UNEB</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.0"
+  }
+}
+</script>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans">
-
-    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="showView('intro')">
-                <div class="bg-blue-900 p-2 rounded-lg">
-                    <i data-lucide="graduation-cap" class="text-white"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold">PAC 2026</h1>
-                    <p class="text-xs text-slate-500">Plano Anual de Capacitação • UNEB</p>
-                </div>
-            </div>
-            <button onclick="showLogin()" class="text-sm font-medium text-slate-600 flex items-center gap-2">
-                <i data-lucide="settings" class="w-4 h-4"></i> Gestão de Pessoas
-            </button>
-        </div>
-    </header>
-
-    <main class="max-w-5xl mx-auto py-12 px-4" id="main-content">
-        </main>
-
-    <script>
-        // Simulação de Banco de Dados (LocalStorage)
-        let responses = JSON.parse(localStorage.getItem('uneb_pac_responses')) || [
-            { id: 1, department: 'Financeiro', role: 'Analista', suggestion: 'Curso de Excel Avançado', date: '10/01/2026' },
-            { id: 2, department: 'TI', role: 'Desenvolvedor', suggestion: 'Metodologias Ágeis', date: '12/01/2026' }
-        ];
-
-        function showView(view) {
-            const container = document.getElementById('main-content');
-            if (view === 'intro') {
-                container.innerHTML = `
-                    <div class="text-center space-y-6">
-                        <h2 class="text-3xl font-bold">Pesquisa de Levantamento de Necessidades</h2>
-                        <p class="text-slate-600">Sua participação é essencial para construirmos o calendário de cursos de 2026.</p>
-                        <button onclick="showView('survey')" class="bg-blue-900 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-800">Iniciar Pesquisa</button>
-                    </div>`;
-            } else if (view === 'survey') {
-                container.innerHTML = `
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                        <h2 class="text-2xl font-bold mb-6">Formulário de Capacitação</h2>
-                        <form onsubmit="saveSurvey(event)" class="space-y-4">
-                            <input type="text" id="dept" placeholder="Seu Setor/Departamento" class="w-full p-3 border rounded" required>
-                            <input type="text" id="role" placeholder="Seu Cargo" class="w-full p-3 border rounded" required>
-                            <textarea id="sug" placeholder="Quais cursos você sugere?" class="w-full p-3 border rounded" rows="4"></textarea>
-                            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded font-bold">Enviar Resposta</button>
-                        </form>
-                    </div>`;
-            } else if (view === 'admin') {
-                renderAdmin();
-            }
-            lucide.createIcons();
-        }
-
-        function showLogin() {
-            const pass = prompt("Digite a senha de acesso ao setor responsável:");
-            if (pass === "admin123") showView('admin');
-            else alert("Senha incorreta!");
-        }
-
-        function saveSurvey(e) {
-            e.preventDefault();
-            const newResp = {
-                id: Date.now(),
-                department: document.getElementById('dept').value,
-                role: document.getElementById('role').value,
-                suggestion: document.getElementById('sug').value,
-                date: new Date().toLocaleDateString('pt-BR')
-            };
-            responses.push(newResp);
-            localStorage.setItem('uneb_pac_responses', JSON.stringify(responses));
-            alert("Resposta enviated com sucesso!");
-            showView('intro');
-        }
-
-        function renderAdmin() {
-            const container = document.getElementById('main-content');
-            container.innerHTML = `
-                <div class="space-y-8">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-2xl font-bold italic text-blue-900">Dashboard de Estratificação (Setor Responsável)</h2>
-                        <button onclick="generateAI()" class="bg-purple-600 text-white px-4 py-2 rounded flex items-center gap-2">
-                            <i data-lucide="sparkles" class="w-4 h-4"></i> IA: Sugerir Trilhas
-                        </button>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 class="font-bold mb-4">Respostas por Departamento</h3>
-                            <canvas id="chartDept"></canvas>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 class="font-bold mb-4">Sugestões da IA para o PAC 2026</h3>
-                            <div id="ai-output" class="text-sm text-slate-600 italic">Clique no botão acima para a IA analisar as demandas...</div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="p-4">Data</th><th class="p-4">Setor</th><th class="p-4">Cargo</th><th class="p-4">Sugestão</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${responses.map(r => `<tr><td class="p-4 border-t">${r.date}</td><td class="p-4 border-t">${r.department}</td><td class="p-4 border-t">${r.role}</td><td class="p-4 border-t">${r.suggestion}</td></tr>`).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
-            
-            new Chart(document.getElementById('chartDept'), {
-                type: 'pie',
-                data: {
-                    labels: [...new Set(responses.map(r => r.department))],
-                    datasets: [{ data: [responses.length], backgroundColor: ['#1e3a8a', '#10b981', '#f59e0b'] }]
-                }
-            });
-        }
-
-        async function generateAI() {
-            const output = document.getElementById('ai-output');
-            output.innerHTML = "A IA está analisando as " + responses.length + " respostas... (Simulando conexão com Google Gemini)";
-            
-            // Aqui você conectaria com a sua chave do Google AI Studio
-            setTimeout(() => {
-                output.innerHTML = `
-                <div class="space-y-4 text-slate-800 not-italic">
-                    <p class="font-bold text-purple-700">Trilha sugerida baseada nos dados:</p>
-                    <ul class="list-disc pl-4 space-y-2">
-                        <li><strong>Eixo Gestão:</strong> Curso de Liderança e Gestão de Conflitos (Alta demanda no Financeiro).</li>
-                        <li><strong>Eixo Técnico:</strong> Workshop de Power BI Avançado e Automação.</li>
-                        <li><strong>Soft Skills:</strong> Trilha de Comunicação Não-Violenta para todos os setores.</li>
-                    </ul>
-                </div>`;
-            }, 2000);
-        }
-
-        // Inicialização
-        showView('intro');
-    </script>
-</body>
+  <body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>
